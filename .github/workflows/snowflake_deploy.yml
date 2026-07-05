@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - 'feature/**' # Triggers dev when you work on feature branches
+      - 'feature/**'
 
 permissions:
   id-token: write
@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   # ----------------------------------------------------
-  # DEV STAGE (Runs on feature branches or pull requests)
+  # DEV STAGE
   # ----------------------------------------------------
   deploy-dev:
     if: github.ref != 'refs/heads/main'
@@ -30,14 +30,14 @@ jobs:
         env:
           SNOWFLAKE_CONNECTIONS_POC_CONN_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_CONNECTIONS_POC_CONN_TOKEN: ${{ env.SNOWFLAKE_TOKEN }}
-          TARGET_DB: ${{ vars.TARGET_DB }} # Injects DEV_DEPLOYMENT_DB
-          CICD_USER: ${{ vars.CICD_USER }}
+          SNOWFLAKE_CONNECTIONS_POC_CONN_USER: ${{ vars.CICD_USER }}       # Native override
+          SNOWFLAKE_CONNECTIONS_POC_CONN_DATABASE: ${{ vars.TARGET_DB }}  # Native override
 
       - name: Deploy to Dev
         run: snow sql -f ./scripts/V1.1__setup_tables.sql
 
   # ----------------------------------------------------
-  # UAT STAGE (Runs automatically when merged to Main)
+  # UAT STAGE
   # ----------------------------------------------------
   deploy-uat:
     if: github.ref == 'refs/heads/main'
@@ -55,14 +55,14 @@ jobs:
         env:
           SNOWFLAKE_CONNECTIONS_POC_CONN_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_CONNECTIONS_POC_CONN_TOKEN: ${{ env.SNOWFLAKE_TOKEN }}
-          TARGET_DB: ${{ vars.TARGET_DB }} # Injects UAT_DEPLOYMENT_DB
-          CICD_USER: ${{ vars.CICD_USER }}
+          SNOWFLAKE_CONNECTIONS_POC_CONN_USER: ${{ vars.CICD_USER }}       # Native override
+          SNOWFLAKE_CONNECTIONS_POC_CONN_DATABASE: ${{ vars.TARGET_DB }}  # Native override
 
       - name: Deploy to UAT
         run: snow sql -f ./scripts/V1.1__setup_tables.sql
 
   # ----------------------------------------------------
-  # PROD STAGE (Runs after UAT finishes successfully)
+  # PROD STAGE
   # ----------------------------------------------------
   deploy-prod:
     needs: deploy-uat
@@ -80,8 +80,8 @@ jobs:
         env:
           SNOWFLAKE_CONNECTIONS_POC_CONN_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_CONNECTIONS_POC_CONN_TOKEN: ${{ env.SNOWFLAKE_TOKEN }}
-          TARGET_DB: ${{ vars.TARGET_DB }} # Injects PROD_DEPLOYMENT_DB
-          CICD_USER: ${{ vars.CICD_USER }}
+          SNOWFLAKE_CONNECTIONS_POC_CONN_USER: ${{ vars.CICD_USER }}       # Native override
+          SNOWFLAKE_CONNECTIONS_POC_CONN_DATABASE: ${{ vars.TARGET_DB }}  # Native override
 
       - name: Deploy to Prod
         run: snow sql -f ./scripts/V1.1__setup_tables.sql
