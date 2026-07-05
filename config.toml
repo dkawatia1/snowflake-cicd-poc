@@ -1,0 +1,5 @@
+default_connection_name = "poc_conn"
+
+[connections.poc_conn]
+account = "AOFYHPA-MNB46129"
+user = "GITHUB_CICD_USER"
