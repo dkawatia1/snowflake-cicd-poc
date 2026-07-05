@@ -19,6 +19,11 @@ jobs:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: development
+    # Moved env block here so ALL steps in this job inherit them
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ vars.CICD_USER }}
+      SNOWFLAKE_DATABASE: ${{ vars.TARGET_DB }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -27,11 +32,6 @@ jobs:
         uses: snowflakedb/snowflake-cli-action@v2.0
         with:
           use-oidc: true
-        env:
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_TOKEN: ${{ env.SNOWFLAKE_TOKEN }}
-          SNOWFLAKE_USER: ${{ vars.CICD_USER }}
-          SNOWFLAKE_DATABASE: ${{ vars.TARGET_DB }}
 
       - name: Test Dev Connection
         run: snow connection test -x
@@ -46,6 +46,11 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: uat
+    # Moved env block here so ALL steps in this job inherit them
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ vars.CICD_USER }}
+      SNOWFLAKE_DATABASE: ${{ vars.TARGET_DB }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -54,11 +59,6 @@ jobs:
         uses: snowflakedb/snowflake-cli-action@v2.0
         with:
           use-oidc: true
-        env:
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_TOKEN: ${{ env.SNOWFLAKE_TOKEN }}
-          SNOWFLAKE_USER: ${{ vars.CICD_USER }}
-          SNOWFLAKE_DATABASE: ${{ vars.TARGET_DB }}
 
       - name: Test UAT Connection
         run: snow connection test -x
@@ -73,6 +73,11 @@ jobs:
     needs: deploy-uat
     runs-on: ubuntu-latest
     environment: production
+    # Moved env block here so ALL steps in this job inherit them
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ vars.CICD_USER }}
+      SNOWFLAKE_DATABASE: ${{ vars.TARGET_DB }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -81,11 +86,6 @@ jobs:
         uses: snowflakedb/snowflake-cli-action@v2.0
         with:
           use-oidc: true
-        env:
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_TOKEN: ${{ env.SNOWFLAKE_TOKEN }}
-          SNOWFLAKE_USER: ${{ vars.CICD_USER }}
-          SNOWFLAKE_DATABASE: ${{ vars.TARGET_DB }}
 
       - name: Test Prod Connection
         run: snow connection test -x
