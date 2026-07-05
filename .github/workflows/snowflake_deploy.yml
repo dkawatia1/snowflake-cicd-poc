@@ -50,6 +50,7 @@ jobs:
           user = "$SNOWFLAKE_USER"
           database = "$SNOWFLAKE_DATABASE"
           role = "$SNOWFLAKE_ROLE"
+          warehouse = "COMPUTE_WH"
           authenticator = "oauth"
           token = "$SNOWFLAKE_TOKEN"
           EOF
@@ -76,6 +77,7 @@ jobs:
       SNOWFLAKE_USER: ${{ vars.CICD_USER }}
       SNOWFLAKE_DATABASE: ${{ vars.TARGET_DB }}
       SNOWFLAKE_ROLE: UAT_CICD_ROLE
+      warehouse = "COMPUTE_WH"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -128,6 +130,7 @@ jobs:
       SNOWFLAKE_USER: ${{ vars.CICD_USER }}
       SNOWFLAKE_DATABASE: ${{ vars.TARGET_DB }}
       SNOWFLAKE_ROLE: PROD_CICD_ROLE
+      warehouse = "COMPUTE_WH"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
