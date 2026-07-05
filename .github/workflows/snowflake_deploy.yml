@@ -1,19 +1,23 @@
-name: Snowflake CLI Deploy POC
+name: Snowflake Multi-Environment Deploy
 
 on:
   push:
     branches:
       - main
+      - 'feature/**' # Triggers dev when you work on feature branches
 
 permissions:
-  id-token: write   # Required to securely hand off tokens to Snowflake
-  contents: read    # Required to read repository files
+  id-token: write
+  contents: read
 
 jobs:
-  deploy:
+  # ----------------------------------------------------
+  # DEV STAGE (Runs on feature branches or pull requests)
+  # ----------------------------------------------------
+  deploy-dev:
+    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment: production # Triggers the specific OIDC security rules
-
+    environment: development
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -26,9 +30,55 @@ jobs:
         env:
           SNOWFLAKE_CONNECTIONS_POC_CONN_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_CONNECTIONS_POC_CONN_TOKEN: ${{ env.SNOWFLAKE_TOKEN }}
+          TARGET_DB: ${{ vars.TARGET_DB }} # Injects DEV_DEPLOYMENT_DB
 
-      - name: Test Snowflake Connection
-        run: snow connection test
+      - name: Deploy to Dev
+        run: snow sql -f ./scripts/V1.1__setup_tables.sql
 
-      - name: Execute Deploy Script
+  # ----------------------------------------------------
+  # UAT STAGE (Runs automatically when merged to Main)
+  # ----------------------------------------------------
+  deploy-uat:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: uat
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Snowflake CLI
+        uses: snowflakedb/snowflake-cli-action@v2.0
+        with:
+          use-oidc: true
+          default-config-file-path: "config.toml"
+        env:
+          SNOWFLAKE_CONNECTIONS_POC_CONN_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_CONNECTIONS_POC_CONN_TOKEN: ${{ env.SNOWFLAKE_TOKEN }}
+          TARGET_DB: ${{ vars.TARGET_DB }} # Injects UAT_DEPLOYMENT_DB
+
+      - name: Deploy to UAT
+        run: snow sql -f ./scripts/V1.1__setup_tables.sql
+
+  # ----------------------------------------------------
+  # PROD STAGE (Runs after UAT finishes successfully)
+  # ----------------------------------------------------
+  deploy-prod:
+    needs: deploy-uat
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Snowflake CLI
+        uses: snowflakedb/snowflake-cli-action@v2.0
+        with:
+          use-oidc: true
+          default-config-file-path: "config.toml"
+        env:
+          SNOWFLAKE_CONNECTIONS_POC_CONN_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_CONNECTIONS_POC_CONN_TOKEN: ${{ env.SNOWFLAKE_TOKEN }}
+          TARGET_DB: ${{ vars.TARGET_DB }} # Injects PROD_DEPLOYMENT_DB
+
+      - name: Deploy to Prod
         run: snow sql -f ./scripts/V1.1__setup_tables.sql
