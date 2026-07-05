@@ -2,6 +2,7 @@ default_connection_name = "poc_conn"
 
 [connections.poc_conn]
 account = "AOFYHPA-MNB46129"
-user = "GITHUB_CICD_USER"
+user = "%CICD_USER%"      # <-- Dynamic variable
+database = "%TARGET_DB%"  # <-- Dynamic variable
 # This tells the CLI to look at an environment variable for the database name
-database = "%TARGET_DB%"
+
