@@ -44,6 +44,7 @@ jobs:
             -d "$SNOWFLAKE_DATABASE" \
             -c METADATA.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table
+            --authenticator oauth          # <--- Explicitly tells schemachange to use the OIDC token
         env:
           SNOWFLAKE_PASSWORD: ${{ env.SNOWFLAKE_TOKEN }} # Seamless passwordless OIDC routing
 
@@ -79,6 +80,7 @@ jobs:
             -d "$SNOWFLAKE_DATABASE" \
             -c METADATA.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table
+            --authenticator oauth          # <--- Explicitly tells schemachange to use the OIDC token
         env:
           SNOWFLAKE_PASSWORD: ${{ env.SNOWFLAKE_TOKEN }}
 
@@ -114,5 +116,6 @@ jobs:
             -d "$SNOWFLAKE_DATABASE" \
             -c METADATA.SCHEMACHANGE.CHANGE_HISTORY \
             --create-change-history-table
+            --authenticator oauth          # <--- Explicitly tells schemachange to use the OIDC token
         env:
           SNOWFLAKE_PASSWORD: ${{ env.SNOWFLAKE_TOKEN }}
