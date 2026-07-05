@@ -1,8 +1,10 @@
 default_connection_name = "poc_conn"
 
 [connections.poc_conn]
-account = "AOFYHPA-MNB46129"
-user = "CICD_USER"      # <-- Dynamic variable
-database = "TARGET_DB"  # <-- Dynamic variable
-# This tells the CLI to look at an environment variable for the database name
+# Leave these as blank placeholders. 
+# GitHub will overwrite them automatically via the workflow environment,
+# and developers can change them locally on their own machines.
+account = ""
+user = ""
+database = ""
 
