@@ -23,6 +23,7 @@ jobs:
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
       SNOWFLAKE_USER: ${{ vars.CICD_USER }}
       SNOWFLAKE_DATABASE: ${{ vars.TARGET_DB }}
+      SNOWFLAKE_ROLE: DEV_CICD_ROLE
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -35,18 +36,33 @@ jobs:
       - name: Install schemachange
         run: pip install schemachange
 
+      - name: Setup Snowflake CLI (Generates OIDC Token)
+        uses: snowflakedb/snowflake-cli-action@v2.0
+        with:
+          use-oidc: true
+
+      - name: Generate Temporary Connection Config
+        run: |
+          mkdir -p ~/.snowflake
+          cat <<EOF > ~/.snowflake/connections.toml
+          [default]
+          account = "$SNOWFLAKE_ACCOUNT"
+          user = "$SNOWFLAKE_USER"
+          database = "$SNOWFLAKE_DATABASE"
+          role = "$SNOWFLAKE_ROLE"
+          authenticator = "oauth"
+          token = "$SNOWFLAKE_TOKEN"
+          EOF
+        env:
+          SNOWFLAKE_TOKEN: ${{ env.SNOWFLAKE_TOKEN }}
+
       - name: Deploy Migrations to Dev
         run: |
           schemachange deploy \
             -f migrations \
-            -a "$SNOWFLAKE_ACCOUNT" \
-            -u "$SNOWFLAKE_USER" \
-            -d "$SNOWFLAKE_DATABASE" \
             -c METADATA.SCHEMACHANGE.CHANGE_HISTORY \
-            --create-change-history-table
-            --authenticator oauth          # <--- Explicitly tells schemachange to use the OIDC token
-        env:
-          SNOWFLAKE_PASSWORD: ${{ env.SNOWFLAKE_TOKEN }} # Seamless passwordless OIDC routing
+            --create-change-history-table \
+            --connection-name default
 
   # ----------------------------------------------------
   # UAT STAGE
@@ -59,6 +75,7 @@ jobs:
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
       SNOWFLAKE_USER: ${{ vars.CICD_USER }}
       SNOWFLAKE_DATABASE: ${{ vars.TARGET_DB }}
+      SNOWFLAKE_ROLE: UAT_CICD_ROLE
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -71,18 +88,33 @@ jobs:
       - name: Install schemachange
         run: pip install schemachange
 
+      - name: Setup Snowflake CLI (Generates OIDC Token)
+        uses: snowflakedb/snowflake-cli-action@v2.0
+        with:
+          use-oidc: true
+
+      - name: Generate Temporary Connection Config
+        run: |
+          mkdir -p ~/.snowflake
+          cat <<EOF > ~/.snowflake/connections.toml
+          [default]
+          account = "$SNOWFLAKE_ACCOUNT"
+          user = "$SNOWFLAKE_USER"
+          database = "$SNOWFLAKE_DATABASE"
+          role = "$SNOWFLAKE_ROLE"
+          authenticator = "oauth"
+          token = "$SNOWFLAKE_TOKEN"
+          EOF
+        env:
+          SNOWFLAKE_TOKEN: ${{ env.SNOWFLAKE_TOKEN }}
+
       - name: Deploy Migrations to UAT
         run: |
           schemachange deploy \
             -f migrations \
-            -a "$SNOWFLAKE_ACCOUNT" \
-            -u "$SNOWFLAKE_USER" \
-            -d "$SNOWFLAKE_DATABASE" \
             -c METADATA.SCHEMACHANGE.CHANGE_HISTORY \
-            --create-change-history-table
-            --authenticator oauth          # <--- Explicitly tells schemachange to use the OIDC token
-        env:
-          SNOWFLAKE_PASSWORD: ${{ env.SNOWFLAKE_TOKEN }}
+            --create-change-history-table \
+            --connection-name default
 
   # ----------------------------------------------------
   # PROD STAGE
@@ -95,6 +127,7 @@ jobs:
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
       SNOWFLAKE_USER: ${{ vars.CICD_USER }}
       SNOWFLAKE_DATABASE: ${{ vars.TARGET_DB }}
+      SNOWFLAKE_ROLE: PROD_CICD_ROLE
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -107,15 +140,30 @@ jobs:
       - name: Install schemachange
         run: pip install schemachange
 
+      - name: Setup Snowflake CLI (Generates OIDC Token)
+        uses: snowflakedb/snowflake-cli-action@v2.0
+        with:
+          use-oidc: true
+
+      - name: Generate Temporary Connection Config
+        run: |
+          mkdir -p ~/.snowflake
+          cat <<EOF > ~/.snowflake/connections.toml
+          [default]
+          account = "$SNOWFLAKE_ACCOUNT"
+          user = "$SNOWFLAKE_USER"
+          database = "$SNOWFLAKE_DATABASE"
+          role = "$SNOWFLAKE_ROLE"
+          authenticator = "oauth"
+          token = "$SNOWFLAKE_TOKEN"
+          EOF
+        env:
+          SNOWFLAKE_TOKEN: ${{ env.SNOWFLAKE_TOKEN }}
+
       - name: Deploy Migrations to Prod
         run: |
           schemachange deploy \
             -f migrations \
-            -a "$SNOWFLAKE_ACCOUNT" \
-            -u "$SNOWFLAKE_USER" \
-            -d "$SNOWFLAKE_DATABASE" \
             -c METADATA.SCHEMACHANGE.CHANGE_HISTORY \
-            --create-change-history-table
-            --authenticator oauth          # <--- Explicitly tells schemachange to use the OIDC token
-        env:
-          SNOWFLAKE_PASSWORD: ${{ env.SNOWFLAKE_TOKEN }}
+            --create-change-history-table \
+            --connection-name default
