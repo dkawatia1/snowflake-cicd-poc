@@ -31,6 +31,7 @@ jobs:
           SNOWFLAKE_CONNECTIONS_POC_CONN_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_CONNECTIONS_POC_CONN_TOKEN: ${{ env.SNOWFLAKE_TOKEN }}
           TARGET_DB: ${{ vars.TARGET_DB }} # Injects DEV_DEPLOYMENT_DB
+          CICD_USER: ${{ vars.CICD_USER }}
 
       - name: Deploy to Dev
         run: snow sql -f ./scripts/V1.1__setup_tables.sql
@@ -55,6 +56,7 @@ jobs:
           SNOWFLAKE_CONNECTIONS_POC_CONN_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_CONNECTIONS_POC_CONN_TOKEN: ${{ env.SNOWFLAKE_TOKEN }}
           TARGET_DB: ${{ vars.TARGET_DB }} # Injects UAT_DEPLOYMENT_DB
+          CICD_USER: ${{ vars.CICD_USER }}
 
       - name: Deploy to UAT
         run: snow sql -f ./scripts/V1.1__setup_tables.sql
@@ -79,6 +81,7 @@ jobs:
           SNOWFLAKE_CONNECTIONS_POC_CONN_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_CONNECTIONS_POC_CONN_TOKEN: ${{ env.SNOWFLAKE_TOKEN }}
           TARGET_DB: ${{ vars.TARGET_DB }} # Injects PROD_DEPLOYMENT_DB
+          CICD_USER: ${{ vars.CICD_USER }}
 
       - name: Deploy to Prod
         run: snow sql -f ./scripts/V1.1__setup_tables.sql
