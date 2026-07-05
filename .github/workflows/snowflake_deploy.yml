@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - 'feature/**'
-
+workflow_dispatch: # <-- Add this line right here!
 permissions:
   id-token: write
   contents: read
