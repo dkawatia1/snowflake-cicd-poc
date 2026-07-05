@@ -19,7 +19,6 @@ jobs:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: development
-    # Moved env block here so ALL steps in this job inherit them
     env:
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
       SNOWFLAKE_USER: ${{ vars.CICD_USER }}
@@ -28,16 +27,25 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Snowflake CLI
-        uses: snowflakedb/snowflake-cli-action@v2.0
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          use-oidc: true
+          python-version: '3.10'
 
-      - name: Test Dev Connection
-        run: snow connection test -x
+      - name: Install schemachange
+        run: pip install schemachange
 
-      - name: Deploy to Dev
-        run: snow sql -f ./scripts/V1.1__setup_tables.sql -x
+      - name: Deploy Migrations to Dev
+        run: |
+          schemachange deploy \
+            -f migrations \
+            -a "$SNOWFLAKE_ACCOUNT" \
+            -u "$SNOWFLAKE_USER" \
+            -d "$SNOWFLAKE_DATABASE" \
+            -c METADATA.SCHEMACHANGE.CHANGE_HISTORY \
+            --create-change-history-table
+        env:
+          SNOWFLAKE_PASSWORD: ${{ env.SNOWFLAKE_TOKEN }} # Seamless passwordless OIDC routing
 
   # ----------------------------------------------------
   # UAT STAGE
@@ -46,7 +54,6 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: uat
-    # Moved env block here so ALL steps in this job inherit them
     env:
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
       SNOWFLAKE_USER: ${{ vars.CICD_USER }}
@@ -55,16 +62,25 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Snowflake CLI
-        uses: snowflakedb/snowflake-cli-action@v2.0
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          use-oidc: true
+          python-version: '3.10'
 
-      - name: Test UAT Connection
-        run: snow connection test -x
+      - name: Install schemachange
+        run: pip install schemachange
 
-      - name: Deploy to UAT
-        run: snow sql -f ./scripts/V1.1__setup_tables.sql -x
+      - name: Deploy Migrations to UAT
+        run: |
+          schemachange deploy \
+            -f migrations \
+            -a "$SNOWFLAKE_ACCOUNT" \
+            -u "$SNOWFLAKE_USER" \
+            -d "$SNOWFLAKE_DATABASE" \
+            -c METADATA.SCHEMACHANGE.CHANGE_HISTORY \
+            --create-change-history-table
+        env:
+          SNOWFLAKE_PASSWORD: ${{ env.SNOWFLAKE_TOKEN }}
 
   # ----------------------------------------------------
   # PROD STAGE
@@ -73,7 +89,6 @@ jobs:
     needs: deploy-uat
     runs-on: ubuntu-latest
     environment: production
-    # Moved env block here so ALL steps in this job inherit them
     env:
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
       SNOWFLAKE_USER: ${{ vars.CICD_USER }}
@@ -82,13 +97,22 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Snowflake CLI
-        uses: snowflakedb/snowflake-cli-action@v2.0
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          use-oidc: true
+          python-version: '3.10'
 
-      - name: Test Prod Connection
-        run: snow connection test -x
+      - name: Install schemachange
+        run: pip install schemachange
 
-      - name: Deploy to Prod
-        run: snow sql -f ./scripts/V1.1__setup_tables.sql -x
+      - name: Deploy Migrations to Prod
+        run: |
+          schemachange deploy \
+            -f migrations \
+            -a "$SNOWFLAKE_ACCOUNT" \
+            -u "$SNOWFLAKE_USER" \
+            -d "$SNOWFLAKE_DATABASE" \
+            -c METADATA.SCHEMACHANGE.CHANGE_HISTORY \
+            --create-change-history-table
+        env:
+          SNOWFLAKE_PASSWORD: ${{ env.SNOWFLAKE_TOKEN }}
