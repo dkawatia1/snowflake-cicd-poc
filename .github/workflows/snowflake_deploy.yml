@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Snowflake CLI
-        uses: snowflakedb/snowflake-cli-action@v1
+        uses: snowflakedb/snowflake-cli-action@v2.0
         with:
           use-oidc: true
           default-config-file-path: "config.toml"
